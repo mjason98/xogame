@@ -1,3 +1,8 @@
-mkdir build
+# mkdir build
+# cd build
+# cmake ..
+
 cd build
-cmake ..
+cmake --build .
+
+./MyGame
