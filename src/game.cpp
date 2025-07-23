@@ -11,6 +11,11 @@ bool Game::init(const std::string& title, int width, int height) {
         return false;
     }
 
+    if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) {
+        std::cerr << "SDL_image could not initialize! IMG_Error: " << IMG_GetError() << std::endl;
+        return false;
+    }
+
     window = SDL_CreateWindow(title.c_str(),
                               SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                               width, height, SDL_WINDOW_SHOWN);
@@ -61,6 +66,11 @@ void Game::render() {
 }
 
 void Game::cleanup() {
+    // clean up resources
+    // SDL_DestroyTexture(texture);
+
+    IMG_Quit();
+
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
