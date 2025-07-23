@@ -2,6 +2,7 @@
 #include <SDL.h>
 #include <SDL_image.h>
 #include <string>
+#include <filesystem>
 
 class Game {
 public:
@@ -16,6 +17,8 @@ private:
     bool isRunning;
     SDL_Window* window;
     SDL_Renderer* renderer;
+
+    SDL_Texture* texture;
 
     void processInput();
     void update();

@@ -30,6 +30,14 @@ bool Game::init(const std::string& title, int width, int height) {
         return false;
     }
 
+    // load resources here
+    // std::string path = std::filesystem::current_path().string() + "/assets/images/npc1.png";
+    std::string path = "assets/images/npc1.png";
+    texture = IMG_LoadTexture(renderer, path.c_str());
+    if (!texture) {
+        std::cerr << "Failed to load image: " << IMG_GetError() << std::endl;
+    }
+
     isRunning = true;
     return true;
 }
@@ -61,6 +69,9 @@ void Game::render() {
     SDL_RenderClear(renderer);
 
     // Draw here
+    SDL_Rect dst = { 100, 100, 200, 200 }; // x, y, w, h
+    SDL_RenderCopy(renderer, texture, nullptr, &dst);
+
 
     SDL_RenderPresent(renderer);
 }
@@ -68,6 +79,8 @@ void Game::render() {
 void Game::cleanup() {
     // clean up resources
     // SDL_DestroyTexture(texture);
+
+    SDL_DestroyTexture(texture);
 
     IMG_Quit();
 
