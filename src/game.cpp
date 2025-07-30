@@ -32,24 +32,41 @@ bool Game::init(const std::string& title, int width, int height) {
     
     // Set internal resolution
     // SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
-    SDL_RenderSetLogicalSize(renderer, 128, 128);
+    SDL_RenderSetLogicalSize(renderer, 256, 256);
     SDL_SetWindowGrab(window, SDL_TRUE);
 
     // load resources here
     // std::string path = std::filesystem::current_path().string() + "/assets/images/npc1.png";
-    std::string path = "assets/images/npc1.png";
-    texture = IMG_LoadTexture(renderer, path.c_str());
-    if (!texture) {
-        std::cerr << "Failed to load image: " << IMG_GetError() << std::endl;
-    }
-
-    // mause
+    
+    // ============================================================
     mause = IMG_LoadTexture(renderer, "assets/images/mause.png");
     if (!mause) {
         std::cerr << "Failed to load mause image: " << IMG_GetError() << std::endl;
     }
     SDL_ShowCursor(SDL_DISABLE);
+    circle = IMG_LoadTexture(renderer, "assets/images/circle.png");
+    if (!circle) {
+        std::cerr << "Failed to load circle image: " << IMG_GetError() << std::endl;
+    }
+    cross = IMG_LoadTexture(renderer, "assets/images/cross.png");
+    if (!cross) {
+        std::cerr << "Failed to load cross image: " << IMG_GetError() << std::endl;
+    }
+    line = IMG_LoadTexture(renderer, "assets/images/line.png");
+    if (!line) {
+        std::cerr << "Failed to load line image: " << IMG_GetError() << std::endl;
+    }
+    // ============================================================
 
+    // Initialize gameboard =======================================
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            gameboard[i][j] = 0; // 0 means empty, 1 for cross, 2 for circle
+            boardPositions[i][j] = { j * 80, i * 80 }; // Set the position for each cell
+        }
+    }
+    
+    // ============================================================
 
     isRunning = true;
     return true;
@@ -64,8 +81,33 @@ void Game::run() {
     }
 }
 
+void Game::getBoardIndex(int mouseX, int mouseY, int& row, int& col) {
+    mouseX -= 16; // Adjust for board offset
+    mouseY -= 16; // Adjust for board offset
+
+    if (mouseX < 0 || mouseY < 0) {
+        row = -1;
+        col = -1; // Out of bounds
+        return;
+    }
+    
+    row = mouseY / 80; // Assuming each cell is 80 pixels high
+    col = mouseX / 80; // Assuming each cell is 80 pixels wide
+    
+    if (row < 0 || row >= 3 || col < 0 || col >= 3) {
+        row = -1;
+        col = -1; // Out of bounds
+    }
+    if (mouseX > col*80 + 64 || mouseY > row*80 + 64) {
+        row = -1;
+        col = -1; // Out of bounds
+    }
+}
+
 void Game::processInput() {
     SDL_Event event;
+    int row, col;
+    
     while (SDL_PollEvent(&event)) {
         if (event.type == SDL_QUIT) {
             isRunning = false;
@@ -73,6 +115,9 @@ void Game::processInput() {
         if (event.type == SDL_MOUSEBUTTONDOWN) {
             if (event.button.button == SDL_BUTTON_LEFT) {
                 std::cout << "Left Click at (" << event.button.x << ", " << event.button.y << ")\n";
+                getBoardIndex(event.button.x*2, event.button.y*2, row, col);
+                // if (row != -1 && col != -1) {
+                std::cout << "Clicked on cell (" << row << ", " << col << ")\n";
             } else if (event.button.button == SDL_BUTTON_RIGHT) {
                 std::cout << "Right Click\n";
             } else if (event.button.button == SDL_BUTTON_MIDDLE) {
@@ -87,17 +132,37 @@ void Game::update() {
 }
 
 void Game::render() {
-    SDL_SetRenderDrawColor(renderer, 38, 43, 68, 255);
+    SDL_SetRenderDrawColor(renderer, 232, 183, 150, 255);
     SDL_RenderClear(renderer);
 
-    // Draw here
-    SDL_Rect dst = { 100, 100, 200, 200 }; // x, y, w, h
-    SDL_RenderCopy(renderer, texture, nullptr, &dst);
+    // Render gameboard =================================
+    SDL_Point center = { 8, 32 };           // Rotation pivot point (center of image)
+    SDL_RendererFlip flip = SDL_FLIP_NONE;
+    int boardOffsetX = 16, boardOffsetY = 16; // adjust if needed
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            SDL_Rect cellRect = { boardPositions[i][j].x + boardOffsetX, boardPositions[i][j].y + boardOffsetY, 64, 64 };
+            if (gameboard[i][j] == 1) {
+                SDL_RenderCopy(renderer, cross, nullptr, &cellRect);
+            } else if (gameboard[i][j] == 2) {
+                SDL_RenderCopy(renderer, circle, nullptr, &cellRect);
+            }
+            if (j < 2) {
+                SDL_Rect lineRect = { boardPositions[i][j].x + 64 + boardOffsetX, boardPositions[i][j].y + boardOffsetY, 16, 64 };
+                SDL_RenderCopy(renderer, line, nullptr, &lineRect);
+            }
+            if (i < 2) {
+                SDL_Rect lineRect = { boardPositions[i][j].x + 24 + boardOffsetX, boardPositions[i][j].y + 40 + boardOffsetY, 16, 64 };
+                SDL_RenderCopyEx(renderer, line, nullptr, &lineRect, 90.0, &center, flip);
+            }
+        }
+    }
 
     // mause  ----------------------
     int x, y;
+    int mouseOffsetX = -16, mouseOffsetY = -1; // adjust if needed
     SDL_GetMouseState(&x, &y);
-    SDL_Rect cursorRect = { x, y, 32, 32 }; // adjust size
+    SDL_Rect cursorRect = { x + mouseOffsetX, y + mouseOffsetY, 32, 32 }; // adjust size
     SDL_RenderCopy(renderer, mause, nullptr, &cursorRect);
     // -----------------------------
 
@@ -108,8 +173,10 @@ void Game::cleanup() {
     // clean up resources
     // SDL_DestroyTexture(texture);
 
-    SDL_DestroyTexture(texture);
     SDL_DestroyTexture(mause);
+    SDL_DestroyTexture(cross);
+    SDL_DestroyTexture(circle);
+    SDL_DestroyTexture(line);
 
     IMG_Quit();
 
