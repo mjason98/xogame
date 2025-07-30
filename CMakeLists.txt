@@ -1,24 +1,26 @@
 cmake_minimum_required(VERSION 3.10)
-project(XOGame)
+project(XOGame LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 
-# SDL2 SDL2_image
-find_package(SDL2 REQUIRED)
-include_directories(${SDL2_INCLUDE_DIRS})
+# Use vcpkg toolchain if passed in
+if(DEFINED CMAKE_TOOLCHAIN_FILE)
+  message(STATUS "Using toolchain: ${CMAKE_TOOLCHAIN_FILE}")
+endif()
 
-find_package(SDL2_image REQUIRED)
-include_directories(${SDL2_IMAGE_INCLUDE_DIRS})
+include_directories(${CMAKE_SOURCE_DIR}/include)
 
-include_directories(/opt/homebrew/include/SDL2)  # <-- adjust if you're on Intel Mac
-link_directories(/opt/homebrew/lib) 
+find_package(SDL2 CONFIG REQUIRED)
+find_package(SDL2_image CONFIG REQUIRED)
 
-# Project structure
-include_directories(include)
-file(GLOB SOURCES "src/*.cpp" "main.cpp")
 
-add_executable(XOGame ${SOURCES})
-target_link_libraries(XOGame ${SDL2_LIBRARIES} SDL2_image)
+file(GLOB_RECURSE SOURCES "src/*.cpp")
+add_executable(XOGame ${SOURCES} main.cpp)
+
+target_link_libraries(XOGame PRIVATE
+    $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
+    $<IF:$<TARGET_EXISTS:SDL2_image::SDL2_image>,SDL2_image::SDL2_image,SDL2_image::SDL2_image-static>
+)
 
 add_custom_command(TARGET XOGame POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory

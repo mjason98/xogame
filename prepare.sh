@@ -1,8 +1,8 @@
-# mkdir build
-# cd build
-# cmake ..
+# prepare 
+cmake --preset default
 
-cd build
-cmake --build .
+# build 
+cmake --build --preset default
 
-./XOGame
+# run
+./build/default/XOGame
