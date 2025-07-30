@@ -3,7 +3,9 @@
         {
             "name": "Mac",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/vcpkg_installed/arm64-osx/include", // or your triplet
+                "${workspaceFolder}/vcpkg_installed/arm64-osx/include/SDL2"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang",

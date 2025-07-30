@@ -8,6 +8,9 @@ if(DEFINED CMAKE_TOOLCHAIN_FILE)
   message(STATUS "Using toolchain: ${CMAKE_TOOLCHAIN_FILE}")
 endif()
 
+option(BUILD_SHARED_LIBS "Build libraries as shared instead of static" OFF)
+set(CMAKE_FIND_LIBRARY_SUFFIXES ".a" ".lib")
+
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
 find_package(SDL2 CONFIG REQUIRED)

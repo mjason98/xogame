@@ -1,5 +1,8 @@
 {
     "files.associations": {
         "string": "cpp"
-    }
+    },
+    "cmake.preferredGenerator": "Ninja",
+    "cmake.configurePreset": "default",
+    "cmake.buildPreset": "default"
 }
