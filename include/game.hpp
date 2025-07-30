@@ -18,7 +18,9 @@ private:
     SDL_Window* window;
     SDL_Renderer* renderer;
 
+    // textures
     SDL_Texture* texture;
+    SDL_Texture* mause;
 
     void processInput();
     void update();

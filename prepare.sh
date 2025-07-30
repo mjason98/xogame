@@ -5,4 +5,4 @@
 cd build
 cmake --build .
 
-./MyGame
+./XOGame

@@ -29,6 +29,11 @@ bool Game::init(const std::string& title, int width, int height) {
         std::cerr << "Renderer Error: " << SDL_GetError() << std::endl;
         return false;
     }
+    
+    // Set internal resolution
+    // SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
+    SDL_RenderSetLogicalSize(renderer, 128, 128);
+    SDL_SetWindowGrab(window, SDL_TRUE);
 
     // load resources here
     // std::string path = std::filesystem::current_path().string() + "/assets/images/npc1.png";
@@ -37,6 +42,14 @@ bool Game::init(const std::string& title, int width, int height) {
     if (!texture) {
         std::cerr << "Failed to load image: " << IMG_GetError() << std::endl;
     }
+
+    // mause
+    mause = IMG_LoadTexture(renderer, "assets/images/mause.png");
+    if (!mause) {
+        std::cerr << "Failed to load mause image: " << IMG_GetError() << std::endl;
+    }
+    SDL_ShowCursor(SDL_DISABLE);
+
 
     isRunning = true;
     return true;
@@ -57,6 +70,15 @@ void Game::processInput() {
         if (event.type == SDL_QUIT) {
             isRunning = false;
         }
+        if (event.type == SDL_MOUSEBUTTONDOWN) {
+            if (event.button.button == SDL_BUTTON_LEFT) {
+                std::cout << "Left Click at (" << event.button.x << ", " << event.button.y << ")\n";
+            } else if (event.button.button == SDL_BUTTON_RIGHT) {
+                std::cout << "Right Click\n";
+            } else if (event.button.button == SDL_BUTTON_MIDDLE) {
+                std::cout << "Middle Click\n";
+            }
+        }
     }
 }
 
@@ -65,13 +87,19 @@ void Game::update() {
 }
 
 void Game::render() {
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_SetRenderDrawColor(renderer, 38, 43, 68, 255);
     SDL_RenderClear(renderer);
 
     // Draw here
     SDL_Rect dst = { 100, 100, 200, 200 }; // x, y, w, h
     SDL_RenderCopy(renderer, texture, nullptr, &dst);
 
+    // mause  ----------------------
+    int x, y;
+    SDL_GetMouseState(&x, &y);
+    SDL_Rect cursorRect = { x, y, 32, 32 }; // adjust size
+    SDL_RenderCopy(renderer, mause, nullptr, &cursorRect);
+    // -----------------------------
 
     SDL_RenderPresent(renderer);
 }
@@ -81,6 +109,7 @@ void Game::cleanup() {
     // SDL_DestroyTexture(texture);
 
     SDL_DestroyTexture(texture);
+    SDL_DestroyTexture(mause);
 
     IMG_Quit();
 
