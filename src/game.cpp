@@ -58,17 +58,8 @@ bool Game::init(const std::string& title, int width, int height) {
     }
     // ============================================================
 
-    // Initialize gameboard =======================================
-    for (int i = 0; i < 3; ++i) {
-        for (int j = 0; j < 3; ++j) {
-            gameboard[i][j] = 0; // 0 means empty, 1 for cross, 2 for circle
-            boardPositions[i][j] = { j * 80, i * 80 }; // Set the position for each cell
-        }
-    }
-    
-    // ============================================================
-
     isRunning = true;
+    hasWinner = false;
     return true;
 }
 
@@ -115,9 +106,32 @@ void Game::processInput() {
         if (event.type == SDL_MOUSEBUTTONDOWN) {
             if (event.button.button == SDL_BUTTON_LEFT) {
                 std::cout << "Left Click at (" << event.button.x << ", " << event.button.y << ")\n";
+                
+                if (hasWinner) {
+                    std::cout << "Game already finished!\n";
+                    continue; // Ignore clicks if game is over
+                }
+
                 getBoardIndex(event.button.x*2, event.button.y*2, row, col);
-                // if (row != -1 && col != -1) {
-                std::cout << "Clicked on cell (" << row << ", " << col << ")\n";
+                
+                if (row != -1 && col != -1) {
+                    std::cout << "Clicked on cell (" << row << ", " << col << ")\n";
+                    if (gameBoard.board[row][col] == 0) { // If the cell is empty
+                        gameBoard.board[row][col] = 1; // Player's move
+                        // Call GameIA to make a move for the AI
+                        auto move = gameIA.findBestMove(gameBoard, 2); // AI's move
+                        std::cout << "AI's move at (" << move.y << ", " << move.x << ")\n";
+                        
+                        if (move.y < 0 || move.x < 0) {
+                            std::cout << "No valid move found by AI!\n";
+                            hasWinner = true;
+                        } else {
+                            gameBoard.board[move.y][move.x] = 2; // Update board with AI's move
+                        }
+                    } else {
+                        std::cout << "Cell already occupied!\n";
+                    }
+                }
             } else if (event.button.button == SDL_BUTTON_RIGHT) {
                 std::cout << "Right Click\n";
             } else if (event.button.button == SDL_BUTTON_MIDDLE) {
@@ -141,18 +155,18 @@ void Game::render() {
     int boardOffsetX = 16, boardOffsetY = 16; // adjust if needed
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
-            SDL_Rect cellRect = { boardPositions[i][j].x + boardOffsetX, boardPositions[i][j].y + boardOffsetY, 64, 64 };
-            if (gameboard[i][j] == 1) {
+            SDL_Rect cellRect = { gameBoard.boardPositions[i][j].x + boardOffsetX, gameBoard.boardPositions[i][j].y + boardOffsetY, 64, 64 };
+            if (gameBoard.board[i][j] == 1) {
                 SDL_RenderCopy(renderer, cross, nullptr, &cellRect);
-            } else if (gameboard[i][j] == 2) {
+            } else if (gameBoard.board[i][j] == 2) {
                 SDL_RenderCopy(renderer, circle, nullptr, &cellRect);
             }
             if (j < 2) {
-                SDL_Rect lineRect = { boardPositions[i][j].x + 64 + boardOffsetX, boardPositions[i][j].y + boardOffsetY, 16, 64 };
+                SDL_Rect lineRect = { gameBoard.boardPositions[i][j].x + 64 + boardOffsetX, gameBoard.boardPositions[i][j].y + boardOffsetY, 16, 64 };
                 SDL_RenderCopy(renderer, line, nullptr, &lineRect);
             }
             if (i < 2) {
-                SDL_Rect lineRect = { boardPositions[i][j].x + 24 + boardOffsetX, boardPositions[i][j].y + 40 + boardOffsetY, 16, 64 };
+                SDL_Rect lineRect = { gameBoard.boardPositions[i][j].x + 24 + boardOffsetX, gameBoard.boardPositions[i][j].y + 40 + boardOffsetY, 16, 64 };
                 SDL_RenderCopyEx(renderer, line, nullptr, &lineRect, 90.0, &center, flip);
             }
         }

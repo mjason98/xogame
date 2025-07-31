@@ -4,7 +4,7 @@
 #include <string>
 #include <filesystem>
 
-#include "gameMath.hpp"
+#include "gameIA.hpp"
 
 class Game {
 public:
@@ -16,9 +16,9 @@ public:
     void cleanup();
 
 private:
-    bool isRunning;
-    int gameboard[3][3]; // 3x3 game board for XO game
-    GamePoint boardPositions[3][3]; // Store positions for each cell
+    bool isRunning, hasWinner;
+    GameBoard gameBoard;
+    GameIA gameIA;
 
     SDL_Window* window;
     SDL_Renderer* renderer;

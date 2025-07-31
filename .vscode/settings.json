@@ -1,6 +1,8 @@
 {
     "files.associations": {
-        "string": "cpp"
+        "string": "cpp",
+        "algorithm": "cpp",
+        "iostream": "cpp"
     },
     "cmake.preferredGenerator": "Ninja",
     "cmake.configurePreset": "default",
