@@ -1,6 +1,8 @@
 #include "gameIA.hpp"
 #include <algorithm>
 #include <iostream>
+#include <fstream>
+#include <stdexcept>
 
 GameBoard::GameBoard() {
     // Initialize the game board
@@ -162,4 +164,53 @@ int GameIA::minimax(GameBoard& board, int depth, bool isMaximizing, char player)
         }
         return bestScore;
     }
+}
+
+//= = Value functions ========================
+
+int GameIA::IdFromState(const GameBoard& board) const {
+    int id = 0;
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            id = id * 3 + board.board[i][j]; // Convert board state to a unique ID
+        }
+    }
+    return id;
+}
+
+void GameIA::load_array(const std::string& filename) {
+    std::ifstream file(filename, std::ios::binary | std::ios::ate);
+    if (!file) throw std::runtime_error("Failed to open file");
+
+    std::streamsize size = file.tellg();
+    if (size % sizeof(float) != 0) {
+        throw std::runtime_error("Invalid file size, not divisible by sizeof(float)");
+    }
+
+    length = size / sizeof(float);
+    file.seekg(0, std::ios::beg);
+
+    weightArray = new float[length];  // allocate
+    if (!file.read(reinterpret_cast<char*>(weightArray), size)) {
+        delete[] weightArray;
+        throw std::runtime_error("Failed to read data");
+    }
+}
+
+void GameIA::releaseWeights() {
+    if (weightArray) {
+        delete[] weightArray;
+        weightArray = nullptr;
+    }
+}
+
+int GameIA::ValueFromState(const GameBoard& board, char player) const {
+    int id = IdFromState(board);
+    if (weightArray) {
+        if (id < 0 || id >= 19683) { // 3^9 possible states for a 3x3 board
+            throw std::out_of_range("State ID out of range");
+        }
+        return weightArray[id];
+    }
+    return 0;
 }

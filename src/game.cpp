@@ -58,6 +58,8 @@ bool Game::init(const std::string& title, int width, int height) {
     }
     // ============================================================
 
+    gameIA.load_array("assets/data/w_xo_array.bin");
+
     isRunning = true;
     hasWinner = false;
     return true;
@@ -184,6 +186,8 @@ void Game::render() {
 }
 
 void Game::cleanup() {
+    gameIA.releaseWeights();
+    
     // clean up resources
     // SDL_DestroyTexture(texture);
 
