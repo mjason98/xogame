@@ -120,9 +120,10 @@ void Game::processInput() {
                     std::cout << "Clicked on cell (" << row << ", " << col << ")\n";
                     if (gameBoard.board[row][col] == 0) { // If the cell is empty
                         gameBoard.board[row][col] = 1; // Player's move
+                        
                         // Call GameIA to make a move for the AI
-                        auto move = gameIA.findBestMove(gameBoard, 2); // AI's move
-                        std::cout << "AI's move at (" << move.y << ", " << move.x << ")\n";
+                        auto move = gameIA.findBestMoveV(gameBoard); // AI's move
+                        std::cout << "AI's move at V (" << move.y << ", " << move.x << ")\n";
                         
                         if (move.y < 0 || move.x < 0) {
                             std::cout << "No valid move found by AI!\n";

@@ -70,109 +70,14 @@ GameIA::GameIA() {
     // Initialize AI if needed
 }
 
-
-int GameIA::heuristic(GameBoard& _board, char player) {
-    int winScore = 20; // Score for winning
-    int loseScore = -20; // Score for losing
-
-    // Check for winning moves
-    if (_board.IsWinMove(player)) {
-        return winScore;
-    }
-    if (_board.IsWinMove(player == 1 ? 2 : 1)) {
-        return loseScore;
-    }
-
-    // check for some cell empty
-    bool hasEmptyCell = false;
-    for (int i = 0; i < 3; ++i) {
-        for (int j = 0; j < 3; ++j) {
-            if (_board.board[i][j] == 0) {
-                hasEmptyCell = true;
-                break;
-            }
-        }
-        if (hasEmptyCell) break;
-    }
-    if (!hasEmptyCell) {
-        return 0; // Draw
-    }
-
-    return 0; // Neutral score if no win or lose condition met
-}
-
-GamePoint GameIA::findBestMove(const GameBoard& board, char player) {
-    int bestScore = -1000;
-    GamePoint bestMove = { -1, -1 };
-
-    for (int i = 0; i < 3; ++i) {
-        for (int j = 0; j < 3; ++j) {
-            if (board.board[i][j] == 0) { // If the cell is empty
-                std::cout << ">> Evaluating move at (" << i << ", " << j << ") for player " << (int)player << "\n";
-
-                GameBoard newBoard = board;
-                newBoard.board[i][j] = player; // Make the move
-                int score = minimax(newBoard, 0, false, player);
-
-                std::cout << ">> Move at (" << i << ", " << j << ") has score " << score << "\n";
-                
-                if (score > bestScore) {
-                    bestScore = score;
-                    bestMove = { j, i }; // Store the position
-
-                    std::cout << ">>* New best move found at (" << i << ", " << j << ") with score " << bestScore << "\n";
-                }
-            }
-        }
-    }
-    std::cout << "Best move for player " << (int)player << " is at (" << bestMove.y << ", " << bestMove.x << ") with score " << bestScore << "\n";
-    
-    return bestMove;
-}
-
-int GameIA::minimax(GameBoard& board, int depth, bool isMaximizing, char player) {
-    char opponent = (player == 1) ? 2 : 1; // Switch player
-    int score = heuristic(board, player);
-
-    // Check for terminal states
-    if (score >= 20) return score - depth; // Maximizing player wins
-    if (score <= -20) return score + depth; // Minimizing player wins
-    if (depth >= 9) return 0; // Draw or max depth reached
-
-    if (isMaximizing) {
-        int bestScore = -1000;
-        for (int i = 0; i < 3; ++i) {
-            for (int j = 0; j < 3; ++j) {
-                if (board.board[i][j] == 0) { // If the cell is empty
-                    board.board[i][j] = player; // Make the move
-                    bestScore = std::max(bestScore, minimax(board, depth + 1, false, player));
-                    board.board[i][j] = 0; // Undo the move
-                }
-            }
-        }
-        return bestScore;
-    } else {
-        int bestScore = 1000;
-        for (int i = 0; i < 3; ++i) {
-            for (int j = 0; j < 3; ++j) {
-                if (board.board[i][j] == 0) { // If the cell is empty
-                    board.board[i][j] = opponent; // Make the move
-                    bestScore = std::min(bestScore, minimax(board, depth + 1, true, player));
-                    board.board[i][j] = 0; // Undo the move
-                }
-            }
-        }
-        return bestScore;
-    }
-}
-
 //= = Value functions ========================
 
 int GameIA::IdFromState(const GameBoard& board) const {
     int id = 0;
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
-            id = id * 3 + board.board[i][j]; // Convert board state to a unique ID
+            id *= 3;
+            id += board.board[i][j]; // Convert board state to a unique ID
         }
     }
     return id;
@@ -195,6 +100,9 @@ void GameIA::load_array(const std::string& filename) {
         delete[] weightArray;
         throw std::runtime_error("Failed to read data");
     }
+    
+    std::cout << "Weights loaded successfully, length: " << length << "\n";
+    std::cout << "First weight: " << weightArray[0] << "\n";
 }
 
 void GameIA::releaseWeights() {
@@ -204,7 +112,7 @@ void GameIA::releaseWeights() {
     }
 }
 
-int GameIA::ValueFromState(const GameBoard& board, char player) const {
+float GameIA::ValueFromState(const GameBoard& board) const {
     int id = IdFromState(board);
     if (weightArray) {
         if (id < 0 || id >= 19683) { // 3^9 possible states for a 3x3 board
@@ -212,5 +120,45 @@ int GameIA::ValueFromState(const GameBoard& board, char player) const {
         }
         return weightArray[id];
     }
-    return 0;
+    return 0.0f;
+}
+
+GamePoint GameIA::findBestMoveV(const GameBoard& board) {
+    float bestScore = -1.0f;
+    GamePoint bestMove = { -1, -1 };
+
+    GameBoard boardI = board; // Copy the current board state
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            if (boardI.board[i][j] == 1)
+                boardI.board[i][j] = 2;
+            else if (boardI.board[i][j] == 2)
+                boardI.board[i][j] = 1;
+        }
+    }
+
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            if (board.board[i][j] == 0) { // If the cell is empty
+                std::cout << ">> Evaluating move at (" << i << ", " << j << ")" << "\n";
+
+                GameBoard newBoard = boardI;
+                newBoard.board[i][j] = 1; // Make the move
+
+                float score = ValueFromState(newBoard);
+
+                std::cout << ">> Move at (" << i << ", " << j << ") has score " << score << "\n";
+                
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestMove = { j, i }; // Store the position
+                    std::cout << ">>* New best move found at (" << i << ", " << j << ") with score " << bestScore << "\n";
+                }
+            }
+        }
+    }
+
+    std::cout << "Best move is at (" << bestMove.y << ", " << bestMove.x << ") with score " << bestScore << "\n";
+    
+    return bestMove;
 }

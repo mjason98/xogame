@@ -15,12 +15,6 @@ struct GameBoard {
 
 struct GameIA {
     GameIA();
-    
-    // search tree heuristic ==================
-    int heuristic(GameBoard& board, char player);
-    GamePoint findBestMove(const GameBoard& board, char player);
-    int minimax(GameBoard& board, int depth, bool isMaximizing, char player);
-    // ========================================
 
     // value functions ========================
     float * weightArray = nullptr; // Pointer to the weights array
@@ -28,6 +22,7 @@ struct GameIA {
     void releaseWeights();
     void load_array(const std::string& filename);
     int IdFromState(const GameBoard& board) const;
-    int ValueFromState(const GameBoard& board, char player) const;
+    float ValueFromState(const GameBoard& board) const;
+    GamePoint findBestMoveV(const GameBoard& board);
     // ========================================
 };
